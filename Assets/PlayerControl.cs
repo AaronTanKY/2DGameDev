@@ -8,13 +8,17 @@ public class PlayerControl : MonoBehaviour
     float movementZ;
     bool isGrounded = false;
     private Rigidbody2D rb;
+    private bool facingRight = true;
     [SerializeField] private float speed = 10f;
     [SerializeField] private float force = 5f;
+    // Animator
+    private Animator animator;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        animator = GetComponent<Animator>();
     }
 
     // Update is called once per frame
@@ -42,6 +46,26 @@ public class PlayerControl : MonoBehaviour
 
         movementX = v.x;
         movementZ = v.y;
+
+        animator.SetBool("walking", !Mathf.Approximately(movementX, 0));
+
+        // Handle flipping
+        if (movementX < 0 && facingRight)
+        {
+            Flip();
+        }
+        else if (movementX > 0 && !facingRight)
+        {
+            Flip();
+        }
+    }
+
+    void Flip()
+    {
+        Vector3 scale = transform.localScale;
+        scale.x *= -1;
+        transform.localScale = scale;
+        facingRight = !facingRight;
     }
 
     void OnJump(InputValue value)
@@ -49,6 +73,7 @@ public class PlayerControl : MonoBehaviour
         if (isGrounded)
         {
             rb.AddForce(Vector2.up * force, ForceMode2D.Impulse);
+            animator.SetBool("jumping", true);
             isGrounded = false;
         }
     }
@@ -58,7 +83,13 @@ public class PlayerControl : MonoBehaviour
         if (collision.gameObject.CompareTag("Ground"))
         {
             isGrounded = true;
+            animator.SetBool("jumping", false);
         }
+    }
+
+    void OnFire()
+    {
+        animator.SetTrigger("fire");
     }
 
 }
